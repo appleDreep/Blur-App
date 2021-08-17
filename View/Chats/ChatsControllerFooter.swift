@@ -83,7 +83,6 @@ class ChatsControllerFooterView:UIView {
             self.users = users.shuffled()
             self.chatsCollectionView.reloadData()
         }
-        
     }
     //MARK: - HELPERS
     func configureCollectionView() {

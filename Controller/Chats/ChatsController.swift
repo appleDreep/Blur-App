@@ -16,6 +16,10 @@ enum LogOutType {
     case logOut
     case disabledAccountLogOut
 }
+enum RefreshType {
+    case chats
+    case users
+}
 
 private let chatCellIdentifier = "Cell"
 
@@ -112,6 +116,9 @@ class ChatsController:UITableViewController {
         let nav = UINavigationController(rootViewController: controller)
         nav.modalPresentationStyle = .fullScreen
         self.present(nav, animated: true, completion: nil)
+    }
+    @objc func handleRefreshUsers() {
+        refreshController(type: .users)
     }
     //MARK: - API
     //MARK: -checkIfUserIsLoggedIn
@@ -211,6 +218,9 @@ class ChatsController:UITableViewController {
         tableView.allowsMultipleSelectionDuringEditing = false
         tableView.showsVerticalScrollIndicator = false
         
+        let refresher = UIRefreshControl()
+        refresher.addTarget(self, action: #selector(handleRefreshUsers), for: .valueChanged)
+        tableView.refreshControl = refresher
     }
     func configureSearchController() {
         navigationItem.searchController = searchController
@@ -234,11 +244,20 @@ class ChatsController:UITableViewController {
             self.present(nav, animated: true, completion: nil)
         }
     }
-    func refreshChats() {
-        DispatchQueue.main.async {
-            self.conversations.removeAll()
-            self.conversationsDictionary.removeAll()
-            self.fetchConversations()
+    func refreshController(type:RefreshType) {
+        switch type {
+        
+        case .chats:
+            DispatchQueue.main.async {
+                self.conversations.removeAll()
+                self.conversationsDictionary.removeAll()
+                self.fetchConversations()
+            }
+        case .users:
+            DispatchQueue.main.asyncAfter(deadline: .now()+1.5) {
+                self.chatsControllerFooterView.fetchUsers()
+                self.refreshControl?.endRefreshing()
+            }
         }
     }
     func configureFooterView() {
@@ -343,7 +362,7 @@ extension ChatsController:AuthenticationDelegate {
 //MARK:-ChatControllerDelegate
 extension ChatsController:ChatControllerDelegate {
     func didDeleteMessages(controller: ChatController) {
-        refreshChats()
+        refreshController(type: .chats)
     }
 }
 //MARK:-ChatsControllerFooterViewDelegate
