@@ -9,6 +9,11 @@ import Foundation
 import Firebase
 
 // user violation model
+enum ViolationKey:String {
+    case type
+    case url
+    case timeCreated
+}
 
 struct Violation {
     let type:String
@@ -16,8 +21,8 @@ struct Violation {
     let timeCreated:String
     
     init(dictionary:[String:Any]) {
-        self.type = dictionary["type"] as? String ?? ""
-        self.url = dictionary["url"] as? String ?? ""
-        self.timeCreated = dictionary["timeCreated"] as? String ?? ""
+        self.type = dictionary[ViolationKey.type.rawValue] as? String ?? ""
+        self.url = dictionary[ViolationKey.url.rawValue] as? String ?? ""
+        self.timeCreated = dictionary[ViolationKey.timeCreated.rawValue] as? String ?? ""
     }
 }

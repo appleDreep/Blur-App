@@ -87,6 +87,7 @@ class RegistrationController:UIViewController {
     }
     //MARK: - SELECTORS
     @objc func handleSignUp() {
+        showLoader(true)
         registrationTextField.resignFirstResponder()
         
         guard registrationTextField.text != nil else {return}
@@ -97,7 +98,7 @@ class RegistrationController:UIViewController {
                 print(error.localizedDescription)
                 return
             }
-            self.delegate?.AuthenticationDidComplete()
+            self.delegate?.AuthenticationDidComplete(type: .async)
         }
     }
     @objc func handleKeyboardWillShow(_ notification: Notification) {

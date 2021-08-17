@@ -45,9 +45,18 @@ class Utilities {
     }
     func attributedButton(part1:String,part2:String,color1:UIColor,color2:UIColor) -> UIButton{
         let button = UIButton(type: .system)
-        let attributed = NSMutableAttributedString(string: "\(part1) ", attributes: [NSAttributedString.Key.foregroundColor:color1,NSAttributedString.Key.font: UIFont.flowerSystemBold])
-        attributed.append(NSAttributedString(string: part2, attributes: [NSAttributedString.Key.foregroundColor:color2,NSAttributedString.Key.font:UIFont.flowerSystemHeavy]))
+        let attributed = NSMutableAttributedString(string: "\(part1) ", attributes: [NSAttributedString.Key.foregroundColor:color1,NSAttributedString.Key.font: UIFont.flowerSystem])
+        attributed.append(NSAttributedString(string: part2, attributes: [NSAttributedString.Key.foregroundColor:color2,NSAttributedString.Key.font:UIFont.flowerSystemBold]))
         button.setAttributedTitle(attributed, for: .normal)
         return button
+    }
+}
+class ViewLoad:UIView {
+    override init(frame: CGRect) {
+        super.init(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height))
+        backgroundColor = .clear
+    }
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }

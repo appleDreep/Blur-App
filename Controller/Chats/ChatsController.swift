@@ -12,12 +12,19 @@ import FacebookLogin
 
 // the ChatsController is the main controller that displays user conversations.
 
+enum LogOutType {
+    case logOut
+    case disabledAccountLogOut
+}
+
 private let chatCellIdentifier = "Cell"
 
 class ChatsController:UITableViewController {
     //MARK: - DATA
     private var currentUser:User? {
         didSet {
+            guard let currentUser = currentUser else {return}
+            guard currentUser.disabled == false else {return logOutAccount(type: .disabledAccountLogOut)}
             configureUI()
             configureSearchController()
             fetchConversations()
@@ -82,7 +89,7 @@ class ChatsController:UITableViewController {
             let alert = UIAlertController(title: "Are you sure \(currentUser.username)?", message: nil, preferredStyle: .alert)
             
             let action = UIAlertAction(title: "Log out", style: .default) { (_) in
-                self.logOut()
+                self.logOutAccount(type: .logOut)
             }
             let cancel = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
             
@@ -107,6 +114,7 @@ class ChatsController:UITableViewController {
         self.present(nav, animated: true, completion: nil)
     }
     //MARK: - API
+    //MARK: -checkIfUserIsLoggedIn
     func checkIfUserIsLoggedIn(){
         if Auth.auth().currentUser == nil {
             presentLogInController()
@@ -114,6 +122,7 @@ class ChatsController:UITableViewController {
             checkIfUserIsRegistered()
         }
     }
+    //MARK: -checkIfUserIsRegistered
     func checkIfUserIsRegistered() {
         AuthService.checkIfUserIsRegistered { (registered) in
             if registered == false {
@@ -123,25 +132,13 @@ class ChatsController:UITableViewController {
             }
         }
     }
-    func logOut() {
-        showLoader(true)
-        DispatchQueue.main.async {
-            LoginManager().logOut()
-            do {
-                try Auth.auth().signOut()
-                self.showLoader(false)
-                self.presentLogInController()
-            }catch let error {
-                print(error.localizedDescription)
-            }
+    //MARK: -fetchCurrentUser
+    func fetchCurrentUser() {
+        UserService.fetchCurrentUser { (user) in
+            self.currentUser = user
         }
     }
-    func fetchSearchUsers() {
-        UserService.fetchUsers { (users) in
-            self.searchUsers = users
-            self.tableView.reloadData()
-        }
-    }
+    //MARK: -fetchConversations
     func fetchConversations() {
         MessagingService.fetchRecentMessages { (conversations) in
             conversations.forEach { (conversations) in
@@ -155,12 +152,47 @@ class ChatsController:UITableViewController {
             }
         }
     }
-    func fetchCurrentUser() {
-        UserService.fetchCurrentUser { (user) in
-            self.currentUser = user
+    //MARK: -fetchSearchUsers
+    func fetchSearchUsers() {
+        UserService.fetchUsers { (users) in
+            self.searchUsers = users
+            self.tableView.reloadData()
         }
     }
-    
+    //MARK: -logOutAccount
+    func logOutAccount(type:LogOutType) {
+        switch type {
+        
+        case .logOut:
+            self.logOut()
+        case .disabledAccountLogOut:
+            self.dismiss(animated: true, completion: nil)
+            
+            let message = "Your account has been disabled for violating our terms."
+            let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+            
+            self.present(alert, animated: true, completion: nil)
+            
+            DispatchQueue.main.asyncAfter(deadline: .now()+3) {
+                alert.dismiss(animated: true, completion: nil)
+                self.logOut()
+            }
+        }
+    }
+    //MARK: -logOut
+    func logOut() {
+        showLoader(true)
+        DispatchQueue.main.async {
+            LoginManager().logOut()
+            do {
+                try Auth.auth().signOut()
+                self.showLoader(false)
+                self.presentLogInController()
+            }catch let error {
+                print(error.localizedDescription)
+            }
+        }
+    }
     //MARK: - HELPERS
     func configureUI() {
         guard let currentUser = currentUser else {return}
@@ -171,7 +203,7 @@ class ChatsController:UITableViewController {
         navigationItem.backBarButtonItem = UIBarButtonItem(customView: backBarButtonItem)
         navigationItem.rightBarButtonItems = [UIBarButtonItem(customView: userBarButtonItem)]
         
-        navigationController?.navigationBar.tintColor = .label
+        navigationItem.backBarButtonItem?.tintColor = .label
         
         tableView.register(ChatsCell.self, forCellReuseIdentifier: chatCellIdentifier)
         
@@ -290,9 +322,22 @@ extension ChatsController:SearchResultControllerDelegate {
 }
 //MARK:-AuthenticationDelegate
 extension ChatsController:AuthenticationDelegate {
-    func AuthenticationDidComplete() {
-        fetchCurrentUser()
-        self.dismiss(animated: true, completion: nil)
+    func AuthenticationDidComplete(type: AuthCompleteType) {
+        switch type {
+        
+        case .normal:
+            self.fetchCurrentUser()
+            self.dismiss(animated: true, completion: nil)
+        case .async:
+            self.navigationController?.popToViewController(self, animated: true)
+            self.conversations.removeAll()
+            self.conversationsDictionary.removeAll()
+            self.tableView.reloadData()
+            DispatchQueue.main.asyncAfter(deadline: .now()+3) {
+                self.fetchCurrentUser()
+                self.dismiss(animated: true, completion: nil)
+            }
+        }
     }
 }
 //MARK:-ChatControllerDelegate
@@ -304,6 +349,8 @@ extension ChatsController:ChatControllerDelegate {
 //MARK:-ChatsControllerFooterViewDelegate
 extension ChatsController:ChatsControllerFooterViewDelegate {
     func didSelectRow(_ controller: ChatsControllerFooterView, user: User) {
-        showChatControllerForUser(user: user)
+        UserService.fetchUser(withUid: user.uid) { (user) in
+            self.showChatControllerForUser(user: user)
+        }
     }
 }

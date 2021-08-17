@@ -228,7 +228,7 @@ extension ChatController: CustomAccesoryViewDelegate {
             
             present(alert, animated: true, completion: nil)
             
-        }else if currentUserBlocked {
+        }else if currentUserBlocked || user.disabled == true {
             let alert = UIAlertController(title: "Message Not Sent", message: "This person isn't receiving messages right now.", preferredStyle: .alert)
             
             let cancel = UIAlertAction(title: "OK", style: .cancel, handler: nil)

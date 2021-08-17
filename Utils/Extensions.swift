@@ -12,15 +12,15 @@ import JGProgressHUD
 // extensions for code reuse.
 
 extension UIViewController {
-    static let hud = JGProgressHUD(style: .dark)
+    static let viewLoad = ViewLoad()
     
     func showLoader(_ show: Bool) {
-        view.endEditing(true)
-        
         if show {
-            UIViewController.hud.show(in: view)
+            UIViewController.viewLoad.endEditing(true)
+            view.addSubview(UIViewController.viewLoad)
         } else {
-            UIViewController.hud.dismiss()
+            UIViewController.viewLoad.endEditing(false)
+            UIViewController.viewLoad.removeFromSuperview()
         }
     }
 }

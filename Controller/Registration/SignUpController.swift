@@ -91,7 +91,7 @@ class SignUpController:UIViewController {
         AuthService.authenticationFacebook(controller: self) { (registered) in
             self.showLoader(false)
             if registered {
-                self.delegate?.AuthenticationDidComplete()
+                self.delegate?.AuthenticationDidComplete(type: .normal)
             }else {
                 let controller = RegistrationController()
                 controller.delegate = self.delegate

@@ -143,6 +143,16 @@ class ChatOptionsController:UITableViewController {
         }
         customAlertController(config: config, preferredStyle: .actionSheet, action: action)
     }
+    //MARK: -userDisabledAlert
+    func userDisabledAlert() {
+        let alert = UIAlertController(title: "User not found", message: nil, preferredStyle: .alert)
+        
+        let action = UIAlertAction(title: "OK", style: .cancel, handler: nil)
+        
+        alert.addAction(action)
+        
+        self.present(alert, animated: true, completion: nil)
+    }
     //MARK: -createAlertController
     func customAlertController(config:CustomAlertControllerConfig,preferredStyle:UIAlertController.Style,action:UIAlertAction) {
         
@@ -192,18 +202,24 @@ extension ChatOptionsController {
         
         tableView.deselectRow(at: indexPath, animated: true)
         
-        switch option {
+        switch user.disabled {
         
-        case .Block:
-            guard let userBlocked = userBlocked else {return}
+        case true:
+            self.userDisabledAlert()
+        case false:
+            switch option {
             
-            if userBlocked {
-                self.showUnblockAlert()
-            }else {
-                self.showBlockAlert()
+            case .Block:
+                guard let userBlocked = userBlocked else {return}
+                
+                if userBlocked {
+                    self.showUnblockAlert()
+                }else {
+                    self.showBlockAlert()
+                }
+            case .Report:
+                self.showReportAlert()
             }
-        case .Report:
-            self.showReportAlert()
         }
     }
 }

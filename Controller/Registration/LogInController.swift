@@ -9,9 +9,13 @@ import Foundation
 import UIKit
 
 // the LogInController is the controller to enter the app through authentication.
+enum AuthCompleteType {
+    case normal
+    case async
+}
 
 protocol AuthenticationDelegate:AnyObject {
-    func AuthenticationDidComplete()
+    func AuthenticationDidComplete(type:AuthCompleteType)
 }
 
 class LogInController:UIViewController {
@@ -97,7 +101,7 @@ class LogInController:UIViewController {
         AuthService.authenticationFacebook(controller: self) { (registered) in
             self.showLoader(false)
             if registered {
-                self.delegate?.AuthenticationDidComplete()
+                self.delegate?.AuthenticationDidComplete(type: .normal)
             }else {
                 let controller = RegistrationController()
                 controller.delegate = self.delegate
